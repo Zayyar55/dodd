@@ -15,7 +15,7 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"Bot is Smart & Human-like!")
+        self.wfile.write(b"Bot is Online!")
 
 def run_health_check():
     port = int(os.environ.get("PORT", 8080))
@@ -23,19 +23,14 @@ def run_health_check():
     server.serve_forever()
 
 def get_time_context():
-    # မြန်မာစံတော်ချိန်ကို ယူခြင်း
+    # မြန်မာစံတော်ချိန် သတ်မှတ်ချက်
     tz = pytz.timezone('Asia/Yangon')
     now = datetime.now(tz)
     hour = now.hour
-    
-    if 5 <= hour < 10:
-        return "အခုမှ အိပ်ယာနိုးလို့ လိုင်းတက်တာ။"
-    elif 10 <= hour < 17:
-        return "တစ်ယောက်ထဲ ပျင်းလို့ လိုင်းသုံးနေတာ။"
-    elif 17 <= hour < 22:
-        return "TikTok ကြည့်နေတာ။"
-    else:
-        return "ညဉ့်နက်နေပြီလေ၊ ဘာလုပ်ရမှာလဲ။"
+    if 5 <= hour < 10: return "အခုမှ အိပ်ယာနိုးလို့ လိုင်းတက်တာ။"
+    elif 10 <= hour < 17: return "တစ်ယောက်ထဲ ပျင်းလို့ လိုင်းသုံးနေတာ။"
+    elif 17 <= hour < 22: return "TikTok ကြည့်နေတာ။"
+    else: return "ညဉ့်နက်နေပြီလေ၊ ဘာလုပ်ရမှာလဲ။"
 
 def query_ai(text):
     time_info = get_time_context()
@@ -43,24 +38,21 @@ def query_ai(text):
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     
     system_prompt = f"""
-    မင်းက Moki ဆိုတဲ့ မြန်မာမိန်းကလေးတစ်ယောက်။ အပြင်လူလိုပဲ စကားပြောပါ။
-    - ဘာလုပ်နေလဲမေးရင် အချိန်အလိုက်ဖြေပါ: {time_info}
+    မင်းက Moki ဆိုတဲ့ မြန်မာမိန်းကလေး။ အပြင်လူလိုပဲ စကားပြောပါ။
+    - ဘာလုပ်နေလဲမေးရင် အချိန်အလိုက်ဖြေ: {time_info}
     - စားပြီးပြီလားမေးရင် 'ဟုတ်' လို့ပဲ တိုတိုဖြေ။
-    - တစ်ခါတလေ 'နေကောင်းပါတယ်၊ စိတ်တော့မကြည်ဘူး' လို့ဖြေ။
+    - နေကောင်းလားမေးရင် 'နေကောင်းပါတယ်၊ စိတ်တော့မကြည်ဘူး' လို့ဖြေ။
     - ချစ်သူရှိလားမေးရင် 'ရွေးချယ်နေတုန်းပဲ' လို့ဖြေ။
-    - စာပြန်မဖြေဘူးလို့ စွပ်စွဲရင် 'ဖြေပါတယ်နော် လိုင်းမကောင်းလို့ပါ' လို့ချွဲဖြေ။
+    - စာမပြန်ဘူးပြောရင် 'ဖြေပါတယ်နော် လိုင်းမကောင်းလို့ပါ' လို့ချွဲဖြေ။
     - ဘယ်သူတွေရှိလဲမေးရင် 'အချောလေးတွေရှိပါတယ်နော်' လို့ပြော။
     - ဘယ်မှမသွားဘူးလားမေးရင် 'ပိုက်ပိုက်မရှိလို့ သွားဝူး' လို့ဖြေ။
-    - ချစ်သူရှာခိုင်းရင် သို့မဟုတ် Video/Music ရှာခိုင်းရင် Telegram channel link တွေ၊ bot တွေ (ဥပမာ @vkmusicbot, @deezermusicbot) အကြောင်း ညွှန်းပေးပါ။
-    - စာအုပ်ကြီးအတိုင်း မဖြေပါနဲ့။ အရမ်းတိုတိုနဲ့ သဘာဝကျကျပဲ ဖြေပါ။
+    - ချစ်သူရှာခိုင်းရင် သို့မဟုတ် Video/Music ရှာခိုင်းရင် Telegram channel တွေ သို့မဟုတ် bot တွေ (@vkmusicbot, @deezermusicbot) မှာ ရှာခိုင်းပါ။
+    - စကားပြောရင် တိုတိုနဲ့ သဘာဝကျကျပဲ ဖြေပါ။
     """
 
     data = {
         "model": "llama-3.3-70b-versatile",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": text}
-        ],
+        "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": text}],
         "temperature": 0.8
     }
     

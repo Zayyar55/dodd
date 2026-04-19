@@ -7,21 +7,21 @@ from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filte
 
 # --- CONFIGURATION ---
 GROQ_API_KEY = "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"
-TG_TOKEN = "8774327296:AAHfzzOTEh0eShFmCLH78fTHR3XVNgk5qFM"
+TG_TOKEN = "8774327296:AAH2X5V18lIE1ukzAM4WoFQOvm8bounP8Iw"
 
-# --- RENDER PORT FIX (Free Plan အတွက်) ---
+# --- RENDER HEALTH CHECK ---
 class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"Moki is Active!")
+        self.wfile.write(b"Moki AI is running with full examples! ❤️")
 
 def run_health_server():
     port = int(os.environ.get("PORT", 8080))
     server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
     server.serve_forever()
 
-# --- AI CHAT LOGIC ---
+# --- AI CHAT LOGIC WITH EXAMPLES ---
 def query_ai(text):
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
@@ -33,7 +33,7 @@ def query_ai(text):
         "messages": [
             {"role": "system", "content": system_prompt},
             
-            # မင်းပေးထားတဲ့ နမူနာ (Conversation Examples) များ
+            # --- ပေးထားသော Examples များ အကုန်လုံး ---
             {"role": "user", "content": "နေကောင်းလား"}, {"role": "assistant", "content": "ကောင်းပါ့ရှင်။"},
             {"role": "user", "content": "ချစ်လား"}, {"role": "assistant", "content": "ချစ်စရာလား။"},
             {"role": "user", "content": "နိုးပြီလား"}, {"role": "assistant", "content": "ကြာပေါ့"},
@@ -71,7 +71,7 @@ def query_ai(text):
             {"role": "user", "content": "Morning"}, {"role": "assistant", "content": "ဟုတ်Morning par"},
             {"role": "user", "content": "ခင်လို့ရလား"}, {"role": "assistant", "content": "ခင်လို့တော့ရပါတယ် ချစ်လို့တော့မရဘူးနော်"},
 
-            # User အခု လက်ရှိ မေးလိုက်တဲ့စာ
+            # Current User Message
             {"role": "user", "content": text}
         ],
         "temperature": 0.8
@@ -79,11 +79,14 @@ def query_ai(text):
     try:
         response = requests.post(url, headers=headers, json=data, timeout=15)
         return response.json()['choices'][0]['message']['content']
-    except:
+    except Exception as e:
+        print(f"Error: {e}")
         return "ခဏလေးနော် ❤️"
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message or not update.message.text: return
+    
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
     ai_response = query_ai(update.message.text)
     await update.message.reply_text(ai_response)
 
@@ -91,5 +94,5 @@ if __name__ == '__main__':
     threading.Thread(target=run_health_server, daemon=True).start()
     app = ApplicationBuilder().token(TG_TOKEN).build()
     app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_message))
-    print("Moki is running with custom examples... ❤️")
+    print("Moki is running with all examples... ❤️")
     app.run_polling()
